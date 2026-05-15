@@ -207,39 +207,36 @@ curl -s "http://localhost:3000/coins/BTC/candles?interval=1h&limit=200" | jq '.[
 
 ## Project structure
 
+The Rust backend lives under `apps/api/`. Everything else in the repo (workspace
+tooling, packages, future frontend) is out of scope for this section.
+
 ```
-sextant/
+apps/api/
 ├── Cargo.toml
-├── docker-compose.yml
-├── .env.example
-├── README.md
-├── architecture.png
+├── docs/
+│   └── architecture.png
 ├── migrations/                  -- sqlx migrations (versioned SQL files)
-│   ├── 20260512_create_notes.sql
-│   ├── 20260513_create_candles.sql
-│   └── ...
+│   ├── 0001_users.sql
+│   └── 0002_refresh_tokens.sql
 └── src/
     ├── main.rs                  -- entry point: config, db pool, router assembly
     ├── config.rs                -- env-driven configuration
     ├── error.rs                 -- shared error type, HTTP mapping
     ├── state.rs                 -- AppState (db pool, config) shared across handlers
+    ├── notes.rs                 -- demo notes resource
     ├── auth/                    -- JWT issuing + verifying, login/register
-    ├── news/                    -- aggregated crypto news
     │   ├── mod.rs
-    │   ├── handler.rs           -- GET /news
-    │   ├── service.rs           -- fan-out fetch + filter
-    │   └── sources.rs           -- RSS feed list
-    ├── prices/                  -- OHLCV price feed (planned)
-    │   ├── mod.rs
-    │   ├── handler.rs           -- GET /coins, /coins/:symbol, /coins/:symbol/candles
-    │   ├── service.rs           -- CoinGecko / Binance integration
-    │   └── fetcher.rs           -- background tokio task
-    ├── indicators/              -- RSI / MACD / MA (planned)
-    │   ├── mod.rs
-    │   └── service.rs
-    └── sentiment/               -- per-article bullish/bearish/neutral (planned)
+    │   ├── extractor.rs         -- Authorization header extractor
+    │   ├── jwt.rs               -- access token issue/verify
+    │   ├── models.rs            -- request/response + DB types
+    │   ├── password.rs          -- Argon2 hashing
+    │   ├── refresh.rs           -- refresh token rotation
+    │   └── routes.rs            -- POST /auth/register, /auth/login, GET /auth/me
+    └── news/                    -- aggregated crypto news
         ├── mod.rs
-        └── service.rs
+        ├── handler.rs           -- GET /news
+        ├── service.rs           -- fan-out fetch + filter
+        └── sources.rs           -- RSS feed list
 ```
 
 Each feature module exposes a `pub fn router() -> Router<AppState>` and is merged into
