@@ -1,23 +1,24 @@
 -- Candles: OHLCV price bars, one row per (coin, interval, timestamp).
 --
--- Written by the background fetcher (which polls CoinGecko / Binance every
--- N minutes) and read by the prices handler. The handler never touches the
--- external API directly — this table is the contract between the two.
+-- Written by the background fetcher (which polls Binance every N seconds)
+-- and read by the prices handler. The handler never touches the external
+-- API directly — this table is the contract between the two halves.
 --
--- `coin` is the ticker symbol in uppercase ('BTC', 'ETH', ...). `interval` is
--- the bar size as a short code ('1h', '4h', '1d'). `ts` is the bar's open time
--- in UTC. NUMERIC is used over DOUBLE PRECISION so prices round-trip exactly
--- and we don't lose satoshi-level precision on large values.
+-- `coin` is the ticker symbol in uppercase ('BTC', 'ETH', ...). `interval`
+-- is the bar size as a short code ('1h', '4h', '1d'). `ts` is the bar's
+-- open time in UTC. OHLCV columns are DOUBLE PRECISION so they map directly
+-- to Rust's f64 without needing a BigDecimal crate. ~15 significant digits
+-- is plenty for chart rendering and indicator math.
 
 CREATE TABLE candles (
-    coin      TEXT         NOT NULL,
-    interval  TEXT         NOT NULL,
-    ts        TIMESTAMPTZ  NOT NULL,
-    open      NUMERIC      NOT NULL,
-    high      NUMERIC      NOT NULL,
-    low       NUMERIC      NOT NULL,
-    close     NUMERIC      NOT NULL,
-    volume    NUMERIC      NOT NULL,
+    coin      TEXT              NOT NULL,
+    interval  TEXT              NOT NULL,
+    ts        TIMESTAMPTZ       NOT NULL,
+    open      DOUBLE PRECISION  NOT NULL,
+    high      DOUBLE PRECISION  NOT NULL,
+    low       DOUBLE PRECISION  NOT NULL,
+    close     DOUBLE PRECISION  NOT NULL,
+    volume    DOUBLE PRECISION  NOT NULL,
 
     PRIMARY KEY (coin, interval, ts),
 
