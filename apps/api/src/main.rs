@@ -1,20 +1,10 @@
-//! HTTP entry point.
-//!
-//! Responsibilities (and only these):
-//!   1. Load configuration from the environment.
-//!   2. Open a Postgres connection pool.
-//!   3. Run pending migrations.
-//!   4. Assemble the router from the feature modules.
-//!   5. Start serving.
-//!
-//! Everything else lives in a feature module.
-
 mod auth;
 mod coins;
 mod config;
 mod error;
 mod news;
 mod notes;
+mod prices;
 mod state;
 
 use std::time::Duration;
@@ -23,6 +13,7 @@ use axum::{Json, Router, routing::get};
 use chrono::Utc;
 use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use crate::config::Config;
@@ -34,6 +25,10 @@ const NEWS_FETCH_INTERVAL: Duration = Duration::from_secs(900);
 
 // Time duration fetch the data for coins Metadata
 const COINS_FETCH_INTERVAL: Duration = Duration::from_secs(6 * 3600);
+
+// How often the prices fetcher polls Binance for new candles. 60s is plenty
+// for 1h+ bars — we'll see a freshly closed candle within a minute of close.
+const PRICES_FETCH_INTERVAL: Duration = Duration::from_secs(60);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -58,6 +53,15 @@ async fn main() -> anyhow::Result<()> {
     // for the process lifetime and we never need to join it.
     news::fetcher::spawn(state.db.clone(), NEWS_FETCH_INTERVAL);
     coins::fetcher::spawn(state.db.clone(), COINS_FETCH_INTERVAL);
+    prices::fetcher::spawn(state.db.clone(), PRICES_FETCH_INTERVAL);
+
+    // Permissive CORS for local dev so the Next.js app on a different port
+    // can talk to us. Lock this down (specific origin via env var) before
+    // shipping anywhere a browser at an unknown origin could reach.
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
 
     let app = Router::new()
         .route("/health", get(health))
@@ -65,8 +69,10 @@ async fn main() -> anyhow::Result<()> {
         .merge(notes::router())
         .merge(news::router())
         .merge(coins::router())
+        .merge(prices::router())
         .with_state(state)
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .layer(cors);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     tracing::info!("listening on http://{addr}");
