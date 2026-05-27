@@ -8,7 +8,46 @@ pub struct Source {
 }
 
 pub const PAIRS: &[Source] = &[
-    Source { coin: "BTC", binance_pair: "BTCUSDT" },
+    Source {
+        coin: "BTC",
+        binance_pair: "BTCUSDT",
+    },
+    Source {
+        coin: "ETH",
+        binance_pair: "ETHUSDT",
+    },
+    Source {
+        coin: "SOL",
+        binance_pair: "SOLUSDT",
+    },
+    Source {
+        coin: "BNB",
+        binance_pair: "BNBUSDT",
+    },
+    Source {
+        coin: "XRP",
+        binance_pair: "XRPUSDT",
+    },
+    Source {
+        coin: "DOGE",
+        binance_pair: "DOGEUSDT",
+    },
+    Source {
+        coin: "ADA",
+        binance_pair: "ADAUSDT",
+    },
+    Source {
+        coin: "AVAX",
+        binance_pair: "AVAXUSDT",
+    },
+    Source {
+        coin: "LINK",
+        binance_pair: "LINKUSDT",
+    },
+    Source {
+        coin: "MATIC",
+        binance_pair: "POLUSDT", // Polygon renamed on Binance
+    },
 ];
 
 /// Intervals to fetch for each pair, expressed as Binance's interval codes.
