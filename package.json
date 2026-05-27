@@ -1,5 +1,5 @@
 {
-  "name": "crypto",
+  "name": "argus",
   "private": true,
   "scripts": {
     "build": "turbo run build",
