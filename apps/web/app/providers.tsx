@@ -5,6 +5,8 @@ import { Provider as ReduxProvider } from "react-redux";
 
 import { makeStore, type AppStore } from "@/store/store";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
+import { CommandPaletteProvider } from "@/components/organisms/CommandPalette";
+import { NewsModalProvider } from "@/components/organisms/NewsModal";
 
 /**
  * Client-side providers wrapping the entire app. Kept thin on purpose —
@@ -21,7 +23,11 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <ReduxProvider store={storeRef.current}>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        <CommandPaletteProvider>
+          <NewsModalProvider>{children}</NewsModalProvider>
+        </CommandPaletteProvider>
+      </ThemeProvider>
     </ReduxProvider>
   );
 }

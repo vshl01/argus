@@ -8,24 +8,26 @@ import { Text } from "@/components/atoms/Text";
 import { CoinIcon } from "./CoinIcon";
 import { ChangeBadge } from "./ChangeBadge";
 import { formatCompactCurrency } from "@/lib/formatters/price";
+import { directionOf } from "@/lib/formatters/percent";
+import { cn } from "@/lib/cn";
 import type { Coin } from "@/features/coins/coinsTypes";
 
 /** One clickable card on the home grid. */
 export function CoinTile({ coin }: { coin: Coin }) {
   return (
     <motion.div
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -3 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >
       <Link
         href={`/coins/${coin.symbol}`}
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
+        className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <Card interactive className="p-4">
           <div className="flex items-center gap-3">
-            <CoinIcon src={coin.icon_url} symbol={coin.symbol} />
-            <div className="flex-1 min-w-0">
-              <Text variant="subtitle" className="truncate">
+            <CoinIcon src={coin.icon_url} symbol={coin.symbol} size={36} />
+            <div className="min-w-0 flex-1">
+              <Text variant="subtitle" className="block truncate leading-tight">
                 {coin.name}
               </Text>
               <Text variant="caption" tone="tertiary">
@@ -35,16 +37,16 @@ export function CoinTile({ coin }: { coin: Coin }) {
             <ChangeBadge value={coin.change_24h_pct} />
           </div>
 
-          <div className="mt-4 flex items-end justify-between">
-            <div>
+          <div className="mt-4 flex items-end justify-between gap-3">
+            <div className="min-w-0">
               <Text variant="label" tone="tertiary">
                 Market cap
               </Text>
-              <Text variant="subtitle" numeric className="block">
+              <Text variant="subtitle" numeric className="block truncate">
                 {formatCompactCurrency(coin.market_cap_usd)}
               </Text>
             </div>
-            <Sparkline change={coin.change_24h_pct} />
+            <ChangeBar value={coin.change_24h_pct} />
           </div>
         </Card>
       </Link>
@@ -53,34 +55,27 @@ export function CoinTile({ coin }: { coin: Coin }) {
 }
 
 /**
- * Tiny faux-sparkline. Real sparkline data isn't yet exposed by the API; this
- * gives the card visual weight in the meantime. Color follows 24h direction
- * so the card still communicates trend at a glance.
+ * Honest 24h-change visualization: a bar whose width tracks the *magnitude*
+ * of the move and whose color tracks its direction. No fabricated price
+ * series — just a faithful rendering of the one number we actually have.
+ * Saturates at ±10% so a single outlier doesn't flatten the rest.
  */
-function Sparkline({ change }: { change: number | null | undefined }) {
-  const positive = (change ?? 0) >= 0;
-  const stroke = positive ? "stroke-positive" : "stroke-negative";
+function ChangeBar({ value }: { value: number | null | undefined }) {
+  const dir = directionOf(value);
+  const pct = Math.min(Math.abs(value ?? 0) / 10, 1) * 100;
+  const color =
+    dir === "positive"
+      ? "bg-positive"
+      : dir === "negative"
+        ? "bg-negative"
+        : "bg-border-strong";
 
   return (
-    <svg
-      width="80"
-      height="28"
-      viewBox="0 0 80 28"
-      fill="none"
-      aria-hidden="true"
-      className={stroke}
-    >
-      <path
-        d={
-          positive
-            ? "M0 22 L12 18 L24 20 L36 14 L48 16 L60 8 L72 10 L80 4"
-            : "M0 6 L12 10 L24 8 L36 14 L48 12 L60 20 L72 18 L80 24"
-        }
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <div className="h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-overlay">
+      <div
+        className={cn("h-full rounded-full transition-[width]", color)}
+        style={{ width: `${Math.max(pct, 6)}%` }}
       />
-    </svg>
+    </div>
   );
 }

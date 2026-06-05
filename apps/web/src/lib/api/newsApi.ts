@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { endpoints } from "@/config/endpoints";
 import type { Article } from "@/features/news/newsTypes";
 
 export interface ListNewsArgs {
@@ -9,6 +10,6 @@ export interface ListNewsArgs {
 
 export const newsApi = {
   list({ coin, limit = 50 }: ListNewsArgs = {}): Promise<Article[]> {
-    return apiClient.get<Article[]>("/news", { coin, limit });
+    return apiClient.get<Article[]>(endpoints.news, { coin, limit });
   },
 };

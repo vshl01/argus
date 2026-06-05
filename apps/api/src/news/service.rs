@@ -53,3 +53,27 @@ pub async fn list_by_coin(db: &PgPool, coin: &str, limit: i64) -> Result<Vec<Art
     .await?;
     Ok(rows)
 }
+
+/// Articles tagged with `coin` whose `published` falls inside
+/// `[first, last]` inclusive, ordered ascending. Used by the chart
+/// endpoint to pull exactly the news that overlaps the visible bars.
+pub async fn list_by_coin_in_range(
+    db: &PgPool,
+    coin: &str,
+    first: DateTime<Utc>,
+    last: DateTime<Utc>,
+) -> Result<Vec<Article>, AppError> {
+    let rows = sqlx::query_as::<_, Article>(
+        "SELECT source, title, link, snippet, published, coins
+         FROM articles
+         WHERE $1 = ANY(coins)
+           AND published BETWEEN $2 AND $3
+         ORDER BY published ASC",
+    )
+    .bind(coin)
+    .bind(first)
+    .bind(last)
+    .fetch_all(db)
+    .await?;
+    Ok(rows)
+}

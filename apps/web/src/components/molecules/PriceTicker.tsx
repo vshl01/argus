@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 
-import { Text } from "@/components/atoms/Text";
 import { formatPrice } from "@/lib/formatters/price";
+import { cn } from "@/lib/cn";
 
 /**
- * Big animated price readout for the coin detail header. The motion key on
- * the price string means a brand-new instance mounts whenever the value
- * changes, which triggers the soft fade-in.
+ * Big animated price readout for the coin detail header. Keying the motion
+ * element on the value means a fresh instance mounts whenever the price
+ * changes, which triggers the soft fade — a subtle "tick" on update.
  */
 export function PriceTicker({
   price,
@@ -17,19 +17,20 @@ export function PriceTicker({
   price: number | null | undefined;
   size?: "lg" | "xl";
 }) {
-  const sizeClass = size === "xl" ? "text-4xl md:text-5xl" : "text-2xl";
+  const sizeClass = size === "xl" ? "text-4xl md:text-5xl" : "text-3xl";
 
   return (
-    <motion.div
+    <motion.span
       key={price}
-      initial={{ opacity: 0.6 }}
-      animate={{ opacity: 1 }}
+      initial={{ opacity: 0.5, y: 2 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className={`${sizeClass} font-semibold tracking-tight num`}
+      className={cn(
+        "num inline-block font-semibold tracking-tight text-text-primary",
+        sizeClass,
+      )}
     >
-      <Text as="span" variant="display" className={sizeClass}>
-        {formatPrice(price)}
-      </Text>
-    </motion.div>
+      {formatPrice(price)}
+    </motion.span>
   );
 }
