@@ -1,4 +1,5 @@
 mod auth;
+mod charts;
 mod coins;
 mod config;
 mod error;
@@ -70,6 +71,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(news::router())
         .merge(coins::router())
         .merge(prices::router())
+        .merge(charts::router())
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(cors);
